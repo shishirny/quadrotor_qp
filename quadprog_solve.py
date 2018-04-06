@@ -4,25 +4,49 @@ __author__ = "Shishir Kolathaya"
 __status__ = "Testing"
 
 import quadprog
-import numpy
+import numpy as np
+from numpy import array, dot
 
-def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
-    qp_G = .5 * (P + P.T)   # make sure P is symmetric
-    qp_a = -q
-    if A is not None:
-        qp_C = -numpy.vstack([A, G]).T
-        qp_b = -numpy.hstack([b, h])
-        meq = A.shape[0]
+def quadprog_solve_qp(H, h, A=None, b=None, C=None, d=None):
+    qp_H = .5 * (H + H.T)   # make sure H is symmetric
+    qp_h = -h
+    if C is not None:
+        qp_C = -numpy.vstack([C, A]).T
+        qp_d = -numpy.hstack([d, b])
+        meq = C.shape[0]
     else:  # no equality constraint
-        qp_C = -G.T
-        qp_b = -h
+        qp_C = -A.T
+        qp_d = -b
         meq = 0
-    return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+
+    # print qp_H
+    # print qp_h
+    # print qp_C
+    # print qp_d
+    return quadprog.solve_qp(qp_H, qp_h, qp_C, qp_d, meq)[0]
 
 if __name__ == '__main__':
-    A = 2
-    b = 2
-    P = 2
-    q = 0
+    # These must be the inputs
+    q_des = 0. # first value is angle and second value is velocity
+    q_act = 2. # first value is angle and second value is velocity
+    q_dot_des = 0.  # first value is angle and second value is velocity
+    q_dot_act = 3.  # first value is angle and second value is velocity
 
-    quadprog_solve_qp(P=P,q=q,A=A,b=b)
+    #P = [[1.732, 1],[1,1,732]]
+    #F = [[0, 1],[0, 0]]
+    #G = [[0],[1]]
+    #V = (x_act - x_des)*P*(x_act - x_des)
+
+    # mass =  3.  # this is the mass of the lever arm in kilograms
+    k_p = 10.  # proportional gain
+    k_d = 1.   # derivative gain
+
+    H = array([[1.]]) # cost function matrix is given here   e.g. u^T H u
+    h = array([0.]) # cost function vector    e.g. h^T u
+
+    A = array([[2.*(q_dot_act - q_dot_des)]])
+    b = array([-2.*(q_act - q_des)*k_p*q_dot_act - q_dot_act*k_d*q_dot_act])
+
+    result = quadprog_solve_qp(H, h, A, b)
+
+    print result
