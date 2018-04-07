@@ -27,10 +27,10 @@ def quadprog_solve_qp(H, h, A=None, b=None, C=None, d=None):
 
 if __name__ == '__main__':
     # These must be the inputs
-    q_des = 0. # first value is angle and second value is velocity
-    q_act = 2. # first value is angle and second value is velocity
-    q_dot_des = 0.  # first value is angle and second value is velocity
-    q_dot_act = 3.  # first value is angle and second value is velocity
+    q_des = 0. # desired angle
+    q_act = 2. # actual angle -- this is the input from the sensor
+    q_dot_des = 0.  # this is desired velocity
+    q_dot_act = 3.  # this is actual velocity
 
     #P = [[1.732, 1],[1,1,732]]
     #F = [[0, 1],[0, 0]]
