@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 """ This code is for solving QP s for our robots """
 __author__ = "Shishir Kolathaya"
@@ -25,6 +26,11 @@ def quadprog_solve_qp(H, h, A=None, b=None, C=None, d=None):
     # print qp_d
     return quadprog.solve_qp(qp_H, qp_h, qp_C, qp_d, meq)[0]
 
+def simple_pd(q_act,q_dot_act):
+    q_des = 0
+    u_in = 10*(q_des - q_act)
+    return u_in
+
 if __name__ == '__main__':
     # These must be the inputs
     q_des = 0. # desired angle
@@ -48,5 +54,4 @@ if __name__ == '__main__':
     b = array([-2.*(q_act - q_des)*k_p*q_dot_act - q_dot_act*k_d*q_dot_act])
 
     result = quadprog_solve_qp(H, h, A, b)
-
     print result
