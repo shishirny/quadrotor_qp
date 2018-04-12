@@ -1,4 +1,5 @@
 
+
 #!/usr/bin/env python
 """ This code is for solving QP s for our robots """
 __author__ = "Shishir Kolathaya"
@@ -7,6 +8,7 @@ __status__ = "Testing"
 import quadprog
 import numpy as np
 from numpy import array, dot
+import serial
 
 def quadprog_solve_qp(H, h, A=None, b=None, C=None, d=None):
     qp_H = .5 * (H + H.T)   # make sure H is symmetric
@@ -29,6 +31,19 @@ def quadprog_solve_qp(H, h, A=None, b=None, C=None, d=None):
 def simple_pd(q_act,q_dot_act):
     q_des = 0
     u_in = 10*(q_des - q_act)
+    return u_in
+
+def qp_q_dot_des(q_act):
+    q_des = 0
+
+    H = array([[1.]])  # cost function matrix is given here   e.g. u^T H u
+    h = array([0.])  # cost function vector    e.g. h^T u
+
+    A = array([[-2. * (q_act - q_des)]]) # inequality constraints are given here Au \leq b
+    b = array([- (q_act - q_des)^2])
+
+    u_in = quadprog_solve_qp(H, h, A, b)
+
     return u_in
 
 if __name__ == '__main__':
