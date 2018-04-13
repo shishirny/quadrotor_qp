@@ -42,8 +42,8 @@ def simple_pd(q_act,q_dot_act):
 def qp_q_dot_des(q_act):
     q_des = 0.
 
-    H = array([[1.]])  # cost function matrix is given here   e.g. u^T H u
-    h = array([0.])  # cost function vector    e.g. h^T u
+    H = array([[100.,0.],[0.,1.]])  # cost function matrix is given here   e.g. u^T H u
+    h = array([0.,0.])  # cost function vector    e.g. h^T u
 
     # stability constraints
     kp = 100.
@@ -59,8 +59,8 @@ def qp_q_dot_des(q_act):
     #A = array([[(q_act - q_des)]]) # inequality constraints are given here Au \leq b
     #b = array([-100. * (q_act - q_des)*(q_act - q_des)])
 
-    A = array([[Va],[-Ba]])  # inequality constraints are given here Au \leq b
-    b = array([Vb],[-Bb])
+    A = array([[-1, Va],[0,-Ba]])  # inequality constraints are given here Au \leq b
+    b = array([Vb,-Bb])
 
     u_in = quadprog_solve_qp(H, h, A, b)
 
@@ -100,11 +100,11 @@ if __name__ == '__main__':
 	ser.write("a");
 	if u_in<10 and u_in>-10:
             ser.write(str(0))
-        ser.write(str(int(u_in[0])))
+        ser.write(str(int(u_in[1])))
         #ser.write("-15")
         #ser.write("\n")
 	#print str(int(u_in))
         #ser.write(str(10))
-        print u_in[0];
+        print u_in[1];
         #time.sleep(1)
         #time.sleep(0.01)
