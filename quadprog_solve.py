@@ -45,8 +45,22 @@ def qp_q_dot_des(q_act):
     H = array([[1.]])  # cost function matrix is given here   e.g. u^T H u
     h = array([0.])  # cost function vector    e.g. h^T u
 
-    A = array([[(q_act - q_des)]]) # inequality constraints are given here Au \leq b
-    b = array([-100. * (q_act - q_des)*(q_act - q_des)])
+    # stability constraints
+    kp = 100.
+    Va = q_act - q_des
+    Vb = -kp * (q_act - q_des)*(q_act - q_des)
+
+    ## safety constraints
+    angle_limit = 2. # in radians
+    Ba = - 2. * q_act # derivative of angle_limit - x^2
+    Bb = - (angle_limit - q_act*q_act) # - (angle_limit - x^2)
+
+    # all inequality constraints are included here
+    #A = array([[(q_act - q_des)]]) # inequality constraints are given here Au \leq b
+    #b = array([-100. * (q_act - q_des)*(q_act - q_des)])
+
+    A = array([[Va],[-Ba]])  # inequality constraints are given here Au \leq b
+    b = array([Vb],[-Bb])
 
     u_in = quadprog_solve_qp(H, h, A, b)
 
