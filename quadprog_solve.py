@@ -46,14 +46,14 @@ def qp_q_dot_des(q_act):
     h = array([0.,0.])  # cost function vector    e.g. h^T u
 
     # stability constraints
-    kp = 100.
+    kp = 10.
     Va = q_act - q_des
     Vb = -kp * (q_act - q_des)*(q_act - q_des)
 
     ## safety constraints
-    angle_limit = 2. # in radians
+    angle_limit = 25. # in radians
     Ba = - 2. * q_act # derivative of angle_limit - x^2
-    Bb = - (angle_limit - q_act*q_act) # - (angle_limit - x^2)
+    Bb = -50. * (angle_limit - q_act*q_act) # - (angle_limit - x^2)
 
     # all inequality constraints are included here
     #A = array([[(q_act - q_des)]]) # inequality constraints are given here Au \leq b
@@ -64,7 +64,7 @@ def qp_q_dot_des(q_act):
 
     u_in = quadprog_solve_qp(H, h, A, b)
 
-    return u_in
+    return array([u_in[1]])
 
 if __name__ == '__main__':
     # These must be the inputs
@@ -90,21 +90,46 @@ if __name__ == '__main__':
 
     result = quadprog_solve_qp(H, h, A, b)'''
     u_in=0
+    before=0.
+    after=0.
+    diff=0.
     while 1:
         #subprocess.call(["tail", "-n","1","/dev/ttyACM0"])
         #subprocess.call(["sed","-n","2p","/dev/ttyACM0"])
+        before=time.clock()
         q_act=float(ser.readline())
         #u_in=simple_pd(q_act,0.)
         u_in=qp_q_dot_des(q_act)
-	#u_in = 12
-	ser.write("a");
-	if u_in<10 and u_in>-10:
+    #u_in = 12
+        ser.write("a");
+        if u_in<10 and u_in>-10:
             ser.write(str(0))
-        ser.write(str(int(u_in[1])))
+            ser.write(str(0))
+            ser.write(str(0))
+            ser.write(str(int(u_in[0])))
+        elif u_in>=10 and u_in<100:
+            ser.write(str(0))
+            ser.write(str(0))
+            ser.write(str(int(u_in[0])))
+        elif u_in<=-10 and u_in>-100:
+            ser.write(str(0))
+            ser.write(str(0))
+            ser.write(str(int(u_in[0])))
+        elif u_in >=100 and u_in <1000:
+            ser.write(str(0))
+            ser.write(str(int(u_in[0])))
+        elif u_in <=-100 and u_in >-1000:
+            ser.write(str(0))
+            ser.write(str(int(u_in[0])))
+        else:
+            ser.write(str(int(u_in[0]))) 
         #ser.write("-15")
         #ser.write("\n")
-	#print str(int(u_in))
+    #print str(int(u_in))
         #ser.write(str(10))
-        print u_in[1];
+        print int(u_in[0]);
+        after=time.clock()
+        diff=after-before
+        print diff
         #time.sleep(1)
         #time.sleep(0.01)
