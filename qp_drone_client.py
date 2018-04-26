@@ -124,23 +124,31 @@ if __name__ == '__main__':
     mean_rpm_2 = 290
     mean_rpm_3 = 310
 
-    servomin = 227
-    servomax = 420
-    i1 = 1
-    b = 0
-    b0 = 0
-    kp_0 = 58
-    kd_0 = 14
-    kp_1 = 58
-    kd_1 = 14
-    kp_2 = 58
-    kd_2 = 14
-    kp_3 = 58
-    kd_3 = 14
+#    servomin = 227
+#    servomax = 420
+#    i1 = 1
+#    b = 0
+#    b0 = 0
+
+    ki_0 = 3.
+    kp_0 = 20.
+    kd_0 = 6.
+
+    ki_1 = 3.
+    kp_1 = 20.
+    kd_1 = 6.
+
+    ki_2 = 3.
+    kp_2 = 20.
+    kd_2 = 6.
+
+    ki_3 = 3.
+    kp_3 = 20.
+    kd_3 = 6.
 
     t0 = time.clock()
     T = 0
-    dt = 0.001
+    dt = 0.003
 
     # here the quadprog is run    # These must be the inputs
     #q_des = 0. # desired angle
@@ -154,9 +162,11 @@ if __name__ == '__main__':
     pwm1.set_pwm(2, 0, 227)
     pwm1.set_pwm(3, 0, 227)
     time.sleep(5)
+
+    fusionInt= array([0.,0.])
+    diff = 0
+    before = 0
     while 1:
-#       before=time.clock()
-#	time_total =  time.clock() - t_start
         if imu.IMURead():
 #	    before=time.clock()
             # x, y, z = imu.getFusionData()
@@ -164,22 +174,24 @@ if __name__ == '__main__':
             data = imu.getIMUData()
             fusionPose = data["fusionPose"]
 	    fusionVel = data["gyro"]
+	    fusionInt[0] = fusionInt[0] + dt*fusionPose[0]
+            fusionInt[1] = fusionInt[1] + dt*fusionPose[1]
             #print("r: %f p: %f y: %f" % (math.degrees(fusionPose[0]), math.degrees(fusionPose[1]), math.degrees(fusionPose[2])))
             time.sleep(poll_interval*1.0/1000.0)
 
 	    roll_offset = 2.*3.14/180.
 
-            u_roll_0= - kp_0 * (fusionPose[0] + roll_offset) - kd_0 * fusionVel[0]
-            u_roll_1= - kp_1 * (fusionPose[0] + roll_offset) - kd_1 * fusionVel[0]
-            u_roll_2= - kp_2 * (fusionPose[0] + roll_offset) - kd_2 * fusionVel[0]
-            u_roll_3= - kp_3 * (fusionPose[0] + roll_offset) - kd_3 * fusionVel[0]
+            u_roll_0= - kp_0 * (fusionPose[0] + roll_offset) - kd_0 * fusionVel[0] - ki_0 * fusionInt[0]
+            u_roll_1= - kp_1 * (fusionPose[0] + roll_offset) - kd_1 * fusionVel[0] - ki_1 * fusionInt[0]
+            u_roll_2= - kp_2 * (fusionPose[0] + roll_offset) - kd_2 * fusionVel[0] - ki_2 * fusionInt[0]
+            u_roll_3= - kp_3 * (fusionPose[0] + roll_offset) - kd_3 * fusionVel[0] - ki_3 * fusionInt[0]
 #            u_roll=qp_q_dot_des(fusionPose[0] + roll_offset) - kd * fusionVel[0]
  #           print int(u_roll[0])
 
-            u_pitch_0= - kp_0 * fusionPose[1] - kd_0 * fusionVel[1]
-            u_pitch_1= - kp_1 * fusionPose[1] - kd_1 * fusionVel[1]
-            u_pitch_2= - kp_2 * fusionPose[1] - kd_2 * fusionVel[1]
-            u_pitch_3= - kp_3 * fusionPose[1] - kd_3 * fusionVel[1]
+            u_pitch_0= - kp_0 * fusionPose[1] - kd_0 * fusionVel[1] - ki_0 * fusionInt[1]
+            u_pitch_1= - kp_1 * fusionPose[1] - kd_1 * fusionVel[1] - ki_1 * fusionInt[1]
+            u_pitch_2= - kp_2 * fusionPose[1] - kd_2 * fusionVel[1] - ki_2 * fusionInt[1]
+            u_pitch_3= - kp_3 * fusionPose[1] - kd_3 * fusionVel[1] - ki_3 * fusionInt[1]
 #            u_pitch=qp_q_dot_des(fusionPose[1]) - kd * fusionVel[1]
 #            print int(u_pitch[0])
 
@@ -189,24 +201,24 @@ if __name__ == '__main__':
 	    u_2 = mean_rpm_2 + int(u_roll_2) - int(u_pitch_2)
 	    u_3 = mean_rpm_3 - int(u_roll_3) + int(u_pitch_3)
 
-#	    print [fusionPose[0], fusionPose[1]]
-	    message = ""
-	    message += struct.pack(">f",fusionVel[0])
-	    message += struct.pack(">f",fusionVel[1])
-            soc = socket.socket()
-    	    host = ''  # ip of computer
-	    port = 12345
-	    soc.connect((host, port))
-	    soc.send(message)
-	    soc.close()
 
 
-#	    print [do_saturate(rpm_in_front), do_saturate(rpm_in_back), do_saturate(rpm_in_left), do_saturate(rpm_in_right)]
-
-#            after=time.clock()
-#            print after-before
     	    pwm1.set_pwm(0, 0, do_saturate(u_0))
             pwm1.set_pwm(1, 0, do_saturate(u_1))
 	    pwm1.set_pwm(2, 0, do_saturate(u_2))
 	    pwm1.set_pwm(3, 0, do_saturate(u_3))
             time.sleep(0.0001)
+
+	    message = ""
+	    message += struct.pack(">f",u_0)
+	    message += struct.pack(">f",u_1)
+            soc = socket.socket()
+   	    host = ''  # ip of computer
+	    port = 12345
+	    soc.connect((host, port))
+	    soc.send(message)
+	    soc.close()
+
+            after=time.clock()
+            diff  = after - before
+	    before = time.clock()
